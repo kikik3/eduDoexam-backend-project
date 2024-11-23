@@ -4,7 +4,6 @@ const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } = 
 const { FIREBASE_CONFIG } = require("../utils/config");
 const firebase = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(firebase);
-const db = require("../db")
 
 authRouter.post('/login', async (request, response) => {
 
@@ -26,7 +25,7 @@ authRouter.post('/login', async (request, response) => {
         });
 
     } catch (error) {
-        console.error('Error logging in user:', error.message);
+        
         response.status(400).json({ 
             error: true,
             message: error.message 
@@ -41,6 +40,8 @@ authRouter.post('/register', async (request, response) => {
     const { name, gender, email, password } = request.body;
 
     try {
+
+        const db = getFirestore();
 
         /**
          * CREATE USER
@@ -60,7 +61,7 @@ authRouter.post('/register', async (request, response) => {
         });
 
     } catch (error) {
-        console.error('Error registering user:', error.message);
+        
         response.status(400).json({ 
             error: true,
             message: error.message 
