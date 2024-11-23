@@ -1,6 +1,6 @@
 const usersRouter = require('express').Router()
 
-usersRouter.get('/profile', async (request, response) => {
+usersRouter.get('/create', async (request, response) => {
     
     response.json({});
 });
