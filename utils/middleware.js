@@ -13,7 +13,6 @@ const unknownEndpoint = (request, response) => {
 }
 
 const errorHandler = (error, request, response, next) => {
-
   logger.error(error.message);
 
   if (error.name === 'CastError') {
@@ -35,12 +34,12 @@ const errorHandler = (error, request, response, next) => {
     return response.status(401).json({
       error: true,
       message: 'token expired'
-    })
+    });
   }
 
-  next(error)
+  // Pass the error to the default error handler if it's not handled here
+  next(error);
 }
-
 
 const tokenExtractor = (request, response, next) => {
   const authorization = request.get('Authorization');
@@ -52,14 +51,11 @@ const tokenExtractor = (request, response, next) => {
   next();
 };
 
-
 const userExtractor = async (request, response, next) => {
   const token = request.token;
 
   if (token) {
-
     try {
-
       const admin = require("firebase-admin");
       const decodedToken = await admin.auth().verifyIdToken(token);
 
@@ -70,29 +66,22 @@ const userExtractor = async (request, response, next) => {
         });
       }
 
-      request.user = decodedToken; 
-      next();
+      request.user = decodedToken;
+      next(); // Proceed to the next middleware or route handler
 
     } catch (error) {
-
       return response.status(401).json({
         error: true,
         message: `Token verification failed`
       });
     }
-
   } else {
-
     return response.status(401).json({
       error: true,
-      error: 'Token missing'
+      message: 'Token missing'
     });
   }
-
-  next();
 };
-
-
 
 module.exports = {
   requestLogger,

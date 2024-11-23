@@ -12,6 +12,7 @@ const examsRouters = require("./controllers/exams")
 const app = express();
 const middleware = require('./utils/middleware');
 
+app.use(middleware.requestLogger)
 
 app.use(cors());
 app.use(express.json());
