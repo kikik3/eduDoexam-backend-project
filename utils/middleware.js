@@ -1,6 +1,4 @@
 const logger = require('./logger')
-const jwt = require('jsonwebtoken');
-const User = require("../models/user");
 
 const requestLogger = (request, response, next) => {
   logger.info('Method:', request.method)
@@ -18,20 +16,30 @@ const errorHandler = (error, request, response, next) => {
   logger.error(error.message);
 
   if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' });
+    return response.status(400).send({
+      error: true,
+      message: 'malformatted id'
+    });
   } else if (error.name === 'ValidationError') {
-    return response.status(400).json({ error: error.message });
+    return response.status(400).json({
+      error: true,
+      message: error.message
+    });
   } else if (error.name === 'JsonWebTokenError') {
-    return response.status(401).json({ error: 'token invalid' });
+    return response.status(401).json({
+      error: true,
+      message: 'token invalid'
+    });
   } else if (error.name === 'TokenExpiredError') {
     return response.status(401).json({
-      error: 'token expired'
-    })
+      error: true,
+      message: 'token expired'
+    });
   }
 
-  next(error)
+  // Pass the error to the default error handler if it's not handled here
+  next(error);
 }
-
 
 const tokenExtractor = (request, response, next) => {
   const authorization = request.get('Authorization');
@@ -43,39 +51,37 @@ const tokenExtractor = (request, response, next) => {
   next();
 };
 
-
 const userExtractor = async (request, response, next) => {
   const token = request.token;
 
   if (token) {
-  
     try {
-      const decodedToken = jwt.verify(token, process.env.SECRET);
+      const admin = require("firebase-admin");
+      const decodedToken = await admin.auth().verifyIdToken(token);
 
-      if (!decodedToken.id) {
-        return response.status(401).json({ error: 'Token invalid' });
+      if (!decodedToken.uid) {
+        return response.status(401).json({
+          error: true,
+          message: 'Token invalid'
+        });
       }
 
-      const user = await User.findById(decodedToken.id);
-      if (user) {
-        request.user = user;
-      } else {
-        return response.status(401).json({ error: 'User not found' });
-      }
+      request.user = decodedToken;
+      next(); // Proceed to the next middleware or route handler
+
     } catch (error) {
-      
-      console.log(error);
-
-      return response.status(401).json({ error: 'Token verification failed' });
+      return response.status(401).json({
+        error: true,
+        message: `Token verification failed`
+      });
     }
   } else {
-    return response.status(401).json({ error: 'Token missing' });
+    return response.status(401).json({
+      error: true,
+      message: 'Token missing'
+    });
   }
-
-  next();
 };
-
-
 
 module.exports = {
   requestLogger,
