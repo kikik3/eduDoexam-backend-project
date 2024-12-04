@@ -10,6 +10,7 @@ const authRouters = require("./controllers/auth")
 const usersRouters = require("./controllers/users")
 const examsRouters = require("./controllers/exams")
 const app = express();
+const port = 5000
 const middleware = require('./utils/middleware');
 
 app.use(middleware.requestLogger)
